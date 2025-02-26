@@ -9,16 +9,20 @@ import (
 
 	"github.com/RemyJohnny/timetable/mdb"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func main() {
-	err := godotenv.Load()
+	/* err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")
+	} */
+	logFile, err := os.OpenFile("timetable.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		log.Fatal(err)
 	}
+	log.SetOutput(logFile)
 
 	clientOptions := options.Client().ApplyURI(os.Getenv("TIMETABLE_MONGODB_STRING"))
 	client, err := mongo.Connect(context.TODO(), clientOptions)
