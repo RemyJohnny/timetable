@@ -102,10 +102,10 @@ func main() {
 			arg := ParseArgs(argStr)
 			SendWeek(&db, userID, bot, arg, true)
 		case "help":
-			helpTxt := "*/today* `command gets the timetable for today`\n\n*/tomorrow* `command gets the timetable for tomorrow`\n\n*/thisweek* `command gets the timetable for the current week`\n\n*/nextweek* `command gets the timetable for next week`\n\n\n"
-			flagTxt := "*-l*  : `Displays subjects full Name. subjects name are abbrivated by default`\n\n*-1*  : `Timetable for subgroup 1 are returned. default` \n\n*-2*  : `Timetable for subgroup 2 are returned`\n\n"
-			expTxt := "*-Example-*\n    /today -l -2\n`Returns the timetable for today and for subgroup 2 with Lecturer's Name and full Subject Name`"
-			msg := tgbotapi.NewMessage(update.Message.Chat.ID, helpTxt+"`Add flags to command modify how and what is being returned. flags:`\n"+flagTxt+expTxt)
+			helpTxt := "*/today* `команда возвращает расписание на сегодня`\n\n*/tomorrow* `команда возвращает расписание на завтра`\n\n*/thisweek* `команда возвращает расписание на текущую неделю`\n\n*/nextweek* `команда возвращает расписание на следующую неделю`\n\n\n"
+			flagTxt := "*-l*  : `Отображает полное имя предмета и имя преподавателя. имя предмета по умолчанию сокращается`\n\n*-1*  : `Расписание для подгруппы 1 возвращено. по умолчанию` \n\n*-2*  : `Расписание для подгруппы 2 возвращено`\n\n"
+			expTxt := "*-Пример-*\n    /today -l -2\n`Возвращает расписание на сегодня и для подгруппы 2 с именем лектора и полным именем предмета.`"
+			msg := tgbotapi.NewMessage(update.Message.Chat.ID, helpTxt+"`Добавьте флаги в команду, чтобы изменить, как и что возвращается. флаги:`\n"+flagTxt+expTxt)
 			msg.ParseMode = tgbotapi.ModeMarkdown
 			_, err := bot.Send(msg)
 			if err != nil {
