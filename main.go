@@ -68,6 +68,7 @@ func main() {
 		// Respond to commands
 
 		userID := update.Message.From.ID
+		chatID := update.Message.Chat.ID
 		text := strings.ToLower(update.Message.Text)
 		switch update.Message.Command() {
 		case "addlecture":
@@ -92,19 +93,19 @@ func main() {
 		case "today":
 			argStr, _ := strings.CutPrefix(strings.TrimSpace(text), "/today")
 			arg := ParseArgs(argStr)
-			sendToday(&db, userID, bot, arg, false)
+			sendToday(&db, chatID, bot, arg, false)
 		case "tomorrow":
 			argStr, _ := strings.CutPrefix(strings.TrimSpace(text), "/tomorrow")
 			arg := ParseArgs(argStr)
-			sendToday(&db, userID, bot, arg, true)
+			sendToday(&db, chatID, bot, arg, true)
 		case "thisweek":
 			argStr, _ := strings.CutPrefix(strings.TrimSpace(text), "/week")
 			arg := ParseArgs(argStr)
-			SendWeek(&db, userID, bot, arg, false)
+			SendWeek(&db, chatID, bot, arg, false)
 		case "nextweek":
 			argStr, _ := strings.CutPrefix(strings.TrimSpace(text), "/nextweek")
 			arg := ParseArgs(argStr)
-			SendWeek(&db, userID, bot, arg, true)
+			SendWeek(&db, chatID, bot, arg, true)
 		case "help":
 			helpTxt := "*/today* `команда возвращает расписание на сегодня`\n\n*/tomorrow* `команда возвращает расписание на завтра`\n\n*/thisweek* `команда возвращает расписание на текущую неделю`\n\n*/nextweek* `команда возвращает расписание на следующую неделю`\n\n\n"
 			flagTxt := "*-l*  : `Отображает полное имя предмета и имя преподавателя. имя предмета по умолчанию сокращается`\n\n*-1*  : `Расписание для подгруппы 1 возвращено. по умолчанию` \n\n*-2*  : `Расписание для подгруппы 2 возвращено`\n\n"
