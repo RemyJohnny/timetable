@@ -39,6 +39,7 @@ func GetCurrentWeek(semesterStartDate string) (int, error) {
 
 func ParseArgs(str string) mdb.Args {
 	var arg mdb.Args
+	arg.Group = "1"
 	arrStr := strings.Split(str, " ")
 	for _, cmd := range arrStr {
 		key := strings.TrimSpace(cmd)
@@ -50,6 +51,8 @@ func ParseArgs(str string) mdb.Args {
 				arg.Group = "1"
 			case "-2":
 				arg.Group = "2"
+			case "-all":
+				arg.Group = ""
 			default:
 				continue
 			}
@@ -507,19 +510,26 @@ func FormatLecture(lecture mdb.Lecture, opt mdb.Args) string {
 	}
 }
 
-func SendLectures(lectures []mdb.Lecture, day string, chatID int64, bot *tgbotapi.BotAPI, opt mdb.Args) {
+func SendLectures(lectures []mdb.Lecture, day string, chatID int64, bot *tgbotapi.BotAPI, opt mdb.Args, mm *MessageManager) {
 	header := fmt.Sprintf("*%v*\n", day)
 	var content string
 	for _, lecture := range lectures {
 		content += FormatLecture(lecture, opt)
 	}
-	msg := tgbotapi.NewMessage(chatID, header+content)
+	group := opt.Group
+	if group == "" {
+		group = "\n_все подгруппы_"
+	} else {
+		group = fmt.Sprintf("\n_подгруппа %v_", group)
+	}
+	msg := tgbotapi.NewMessage(chatID, header+content+group)
 	msg.ParseMode = tgbotapi.ModeMarkdown
-	bot.Send(msg)
+	//bot.Send(msg)
+	SendMessage(bot, msg, mm)
 }
 
-func sendToday(db *mdb.Db, chatID int64, bot *tgbotapi.BotAPI, opt mdb.Args, tommorrow bool) {
-	print := "No Lectures Today 🎊"
+func sendToday(db *mdb.Db, chatID int64, bot *tgbotapi.BotAPI, opt mdb.Args, tommorrow bool, mm *MessageManager) {
+	print := "Сегодня занятий нет 🎊"
 	week, _ := GetCurrentWeek(os.Getenv("SEMESTER_START_DATE"))
 	day := int(time.Now().Weekday())
 	if tommorrow {
@@ -531,7 +541,7 @@ func sendToday(db *mdb.Db, chatID int64, bot *tgbotapi.BotAPI, opt mdb.Args, tom
 				week = 1
 			}
 		}
-		print = "No Lectures Tomorrow 🎊"
+		print = "завтра занятий нет 🎊"
 	}
 	filter := bson.M{
 		"$or": []bson.M{
@@ -555,18 +565,20 @@ func sendToday(db *mdb.Db, chatID int64, bot *tgbotapi.BotAPI, opt mdb.Args, tom
 	lectures, err := db.GetLectures(filter)
 	if err != nil {
 		msg := tgbotapi.NewMessage(chatID, fmt.Sprintf("error : %v", err))
-		bot.Send(msg)
+		//bot.Send(msg)
+		SendMessage(bot, msg, mm)
 	}
 	if len(lectures) > 0 {
-		SendLectures(lectures, mdb.Days[day], chatID, bot, opt)
+		SendLectures(lectures, mdb.Days[day], chatID, bot, opt, mm)
 	} else {
 		msg := tgbotapi.NewMessage(chatID, print)
-		bot.Send(msg)
+		//bot.Send(msg)
+		SendMessage(bot, msg, mm)
 	}
 
 }
 
-func SendWeek(db *mdb.Db, chatID int64, bot *tgbotapi.BotAPI, opt mdb.Args, nextWeek bool) {
+func SendWeek(db *mdb.Db, chatID int64, bot *tgbotapi.BotAPI, opt mdb.Args, nextWeek bool, mm *MessageManager) {
 	week, _ := GetCurrentWeek(os.Getenv("SEMESTER_START_DATE"))
 	if nextWeek {
 		week += 1
@@ -576,23 +588,30 @@ func SendWeek(db *mdb.Db, chatID int64, bot *tgbotapi.BotAPI, opt mdb.Args, next
 	}
 	fmt.Printf("week: %v", week)
 	daysKeys := []int{1, 2, 3, 4, 5, 6}
-	if opt.Group == "" {
-		opt.Group = "1"
-	}
 	filter := bson.M{
 		"$and": []bson.M{
 			{"$or": []bson.M{
 				{"week": fmt.Sprint(week)},
 				{"week": "0"}}},
-			{"$or": []bson.M{
-				{"sub_group": opt.Group},
-				{"sub_group": "0"}},
-			}},
+		},
+	}
+	if opt.Group != "" {
+		filter = bson.M{
+			"$and": []bson.M{
+				{"$or": []bson.M{
+					{"week": fmt.Sprint(week)},
+					{"week": "0"}}},
+				{"$or": []bson.M{
+					{"sub_group": opt.Group},
+					{"sub_group": "0"}},
+				}},
+		}
 	}
 	lectures, err := db.GetLectures(filter)
 	if err != nil {
 		msg := tgbotapi.NewMessage(chatID, fmt.Sprintf("error : %v", err))
-		bot.Send(msg)
+		//bot.Send(msg)
+		SendMessage(bot, msg, mm)
 	}
 	for _, v := range daysKeys {
 		var day []mdb.Lecture
@@ -602,11 +621,20 @@ func SendWeek(db *mdb.Db, chatID int64, bot *tgbotapi.BotAPI, opt mdb.Args, next
 			}
 		}
 		if len(day) > 0 {
-			SendLectures(day, mdb.Days[v], chatID, bot, opt)
+			SendLectures(day, mdb.Days[v], chatID, bot, opt, mm)
 		} else {
 			msg := tgbotapi.NewMessage(chatID, fmt.Sprintf(" %v свободен🎊", mdb.Days[v]))
-			bot.Send(msg)
+			//bot.Send(msg)
+			SendMessage(bot, msg, mm)
 		}
 
 	}
+}
+
+func SendMessage(bot *tgbotapi.BotAPI, msg tgbotapi.Chattable, mm *MessageManager) {
+	msgData, err := bot.Send(msg)
+	if err != nil {
+		log.Printf("sending error : %v", err)
+	}
+	mm.Add(msgData.MessageID, SentMessage{MessageID: msgData.MessageID, ChatID: msgData.Chat.ID})
 }

@@ -60,6 +60,8 @@ func main() {
 	var lectureUpdate = make(map[int64]UpdateLecture)
 	var lectureDelete = make(map[int64]string)
 
+	var mm = NewMessageManager(bot)
+
 	for update := range updates {
 		if update.Message == nil { // ignore non-messages
 			continue
@@ -70,7 +72,8 @@ func main() {
 		userID := update.Message.From.ID
 		chatID := update.Message.Chat.ID
 		text := strings.ToLower(update.Message.Text)
-		switch update.Message.Command() {
+		command := update.Message.Command()
+		switch command {
 		case "addlecture":
 			if Auth(admins, strconv.FormatInt(userID, 10)) {
 				lectureInput[userID] = mdb.Lecture{}
@@ -93,23 +96,40 @@ func main() {
 		case "today":
 			argStr, _ := strings.CutPrefix(strings.TrimSpace(text), "/today")
 			arg := ParseArgs(argStr)
-			sendToday(&db, chatID, bot, arg, false)
+			sendToday(&db, chatID, bot, arg, false, mm)
 		case "tomorrow":
 			argStr, _ := strings.CutPrefix(strings.TrimSpace(text), "/tomorrow")
 			arg := ParseArgs(argStr)
-			sendToday(&db, chatID, bot, arg, true)
+			sendToday(&db, chatID, bot, arg, true, mm)
 		case "thisweek":
-			argStr, _ := strings.CutPrefix(strings.TrimSpace(text), "/week")
+			argStr, _ := strings.CutPrefix(strings.TrimSpace(text), "/thisweek")
 			arg := ParseArgs(argStr)
-			SendWeek(&db, chatID, bot, arg, false)
+			SendWeek(&db, chatID, bot, arg, false, mm)
 		case "nextweek":
 			argStr, _ := strings.CutPrefix(strings.TrimSpace(text), "/nextweek")
 			arg := ParseArgs(argStr)
-			SendWeek(&db, chatID, bot, arg, true)
+			SendWeek(&db, chatID, bot, arg, true, mm)
+			//russian cmd
+		case "сегодня":
+			argStr, _ := strings.CutPrefix(strings.TrimSpace(text), "/сегодня")
+			arg := ParseArgs(argStr)
+			sendToday(&db, chatID, bot, arg, false, mm)
+		case "завтра":
+			argStr, _ := strings.CutPrefix(strings.TrimSpace(text), "/завтра")
+			arg := ParseArgs(argStr)
+			sendToday(&db, chatID, bot, arg, true, mm)
+		case "текущая-неделя":
+			argStr, _ := strings.CutPrefix(strings.TrimSpace(text), "/текущая-неделя")
+			arg := ParseArgs(argStr)
+			SendWeek(&db, chatID, bot, arg, false, mm)
+		case "следующая-неделя":
+			argStr, _ := strings.CutPrefix(strings.TrimSpace(text), "/следующая-неделя")
+			arg := ParseArgs(argStr)
+			SendWeek(&db, chatID, bot, arg, true, mm)
 		case "help":
-			helpTxt := "*/today* `команда возвращает расписание на сегодня`\n\n*/tomorrow* `команда возвращает расписание на завтра`\n\n*/thisweek* `команда возвращает расписание на текущую неделю`\n\n*/nextweek* `команда возвращает расписание на следующую неделю`\n\n\n"
-			flagTxt := "*-l*  : `Отображает полное имя предмета и имя преподавателя. имя предмета по умолчанию сокращается`\n\n*-1*  : `Расписание для подгруппы 1 возвращено. по умолчанию` \n\n*-2*  : `Расписание для подгруппы 2 возвращено`\n\n"
-			expTxt := "*-Пример-*\n    /today -l -2\n`Возвращает расписание на сегодня и для подгруппы 2 с именем лектора и полным именем предмета.`"
+			helpTxt := "*/today | /сегодня* `команда возвращает расписание на сегодня`\n\n*/tomorrow | /завтра* `команда возвращает расписание на завтра`\n\n*/thisweek | /текущая-неделя* `команда возвращает расписание на текущую неделю`\n\n*/nextweek | /следующая-неделя* `команда возвращает расписание на следующую неделю`\n\n\n"
+			flagTxt := "*-l*  : `Отображает полное имя предмета и имя преподавателя. имя предмета по умолчанию сокращается`\n\n*-1*  : `возвращает расписание для подгруппы 1 . по умолчанию` \n\n*-2*  : `возвращает расписание для подгруппы 2 `\n\n*-all*  : `возвращает расписание для всей подгруппы`\n\n"
+			expTxt := "*-Пример-*\n    /сегодня -l -2\n`Возвращает расписание на сегодня и для подгруппы 2 с именем лектора и полным именем предмета.`"
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, helpTxt+"`Добавьте флаги в команду, чтобы изменить, как и что возвращается. флаги:`\n"+flagTxt+expTxt)
 			msg.ParseMode = tgbotapi.ModeMarkdown
 			_, err := bot.Send(msg)

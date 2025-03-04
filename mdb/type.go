@@ -93,7 +93,8 @@ type Args struct {
 }
 
 var CmdOpts = map[string]int{
-	"-l": 1,
-	"-1": 2,
-	"-2": 3,
+	"-l":   1,
+	"-1":   2,
+	"-2":   3,
+	"-all": 4,
 }
