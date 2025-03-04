@@ -43,7 +43,7 @@ func (mm *MessageManager) Add(key int, value SentMessage) {
 	mm.mu.Lock()
 	defer mm.mu.Unlock()
 	mm.data[key] = value
-	time.AfterFunc(1*time.Minute,
+	time.AfterFunc(5*time.Minute,
 		func() {
 			mm.deleteChan <- key
 		})

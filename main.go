@@ -109,25 +109,8 @@ func main() {
 			argStr, _ := strings.CutPrefix(strings.TrimSpace(text), "/nextweek")
 			arg := ParseArgs(argStr)
 			SendWeek(&db, chatID, bot, arg, true, mm)
-			//russian cmd
-		case "сегодня":
-			argStr, _ := strings.CutPrefix(strings.TrimSpace(text), "/сегодня")
-			arg := ParseArgs(argStr)
-			sendToday(&db, chatID, bot, arg, false, mm)
-		case "завтра":
-			argStr, _ := strings.CutPrefix(strings.TrimSpace(text), "/завтра")
-			arg := ParseArgs(argStr)
-			sendToday(&db, chatID, bot, arg, true, mm)
-		case "текущая-неделя":
-			argStr, _ := strings.CutPrefix(strings.TrimSpace(text), "/текущая-неделя")
-			arg := ParseArgs(argStr)
-			SendWeek(&db, chatID, bot, arg, false, mm)
-		case "следующая-неделя":
-			argStr, _ := strings.CutPrefix(strings.TrimSpace(text), "/следующая-неделя")
-			arg := ParseArgs(argStr)
-			SendWeek(&db, chatID, bot, arg, true, mm)
 		case "help":
-			helpTxt := "*/today | /сегодня* `команда возвращает расписание на сегодня`\n\n*/tomorrow | /завтра* `команда возвращает расписание на завтра`\n\n*/thisweek | /текущая-неделя* `команда возвращает расписание на текущую неделю`\n\n*/nextweek | /следующая-неделя* `команда возвращает расписание на следующую неделю`\n\n\n"
+			helpTxt := "*/today* `команда возвращает расписание на сегодня`\n\n*/tomorrow* `команда возвращает расписание на завтра`\n\n*/thisweek* `команда возвращает расписание на текущую неделю`\n\n*/nextweek* `команда возвращает расписание на следующую неделю`\n\n\n"
 			flagTxt := "*-l*  : `Отображает полное имя предмета и имя преподавателя. имя предмета по умолчанию сокращается`\n\n*-1*  : `возвращает расписание для подгруппы 1 . по умолчанию` \n\n*-2*  : `возвращает расписание для подгруппы 2 `\n\n*-all*  : `возвращает расписание для всей подгруппы`\n\n"
 			expTxt := "*-Пример-*\n    /сегодня -l -2\n`Возвращает расписание на сегодня и для подгруппы 2 с именем лектора и полным именем предмета.`"
 			msg := tgbotapi.NewMessage(update.Message.Chat.ID, helpTxt+"`Добавьте флаги в команду, чтобы изменить, как и что возвращается. флаги:`\n"+flagTxt+expTxt)
